@@ -7,9 +7,10 @@
 
 	let isLoggedIn = null;
 	isLoggedIn = db.authStore.isValid;
-	db.authStore.onChange(() => {
+	db.authStore.onChange((token, model) => {
+		console.log(token, model, db.authStore.isValid)
 		isLoggedIn = db.authStore.isValid;
-	})
+	}, true)
 	// I won't bother using a special Log In route, it's not needed.
 </script>
 <div class="page-container">
@@ -18,7 +19,6 @@
 {#if isLoggedIn === null}
 	Loading...
 {:else if isLoggedIn}
-	Logged In
 	<slot />
 {:else}
 	<LogIn />

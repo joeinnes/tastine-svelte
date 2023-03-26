@@ -27,7 +27,7 @@ Username
 <style>
   .container {
     background-color: var(--color-orange-1);
-    @apply w-full max-w-prose shadow rounded p-3;
+    @apply w-full max-w-prose shadow rounded p-3 mx-auto;
   }
   button {
     background-color: var(--color-orange-4);
