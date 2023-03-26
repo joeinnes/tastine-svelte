@@ -1,3 +1,9 @@
-# tastine-svelte
+# Tastine
 
-[Edit on StackBlitz ⚡️](https://stackblitz.com/edit/tastine)
+To do:
+
+- [ ] Log in
+- [ ] Recipe listing
+- [ ] Recipe addition
+- [ ] Weekly planning
+- [ ] Shopping list
