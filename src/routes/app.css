@@ -1,3 +1,28 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+[data-theme='light'],
+:root:not([data-theme='dark']) {
+	--primary: var(--color-orange-4);
+	--primary-hover: var(--color-orange-3);
+	--primary-focus: var(--color-orange-2);
+	--primary-inverse: #fff;
+}
+
+@media only screen and (prefers-color-scheme: dark) {
+	[data-theme='light'],
+	:root:not([data-theme='dark']) {
+		--primary: var(--color-orange-4);
+		--primary-hover: var(--color-orange-3);
+		--primary-focus: var(--color-orange-2);
+		--primary-inverse: #fff;
+	}
+}
+
+:root {
+	--form-element-active-border-color: var(--primary);
+	--form-element-focus-color: var(--primary-focus);
+	--switch-color: var(--primary-inverse);
+	--switch-checked-background-color: var(--primary);
+}

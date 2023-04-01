@@ -1,38 +1,56 @@
 <script lang="ts">
-import {db} from '$lib/db/db';
-export let recipe;
+	import { db } from '$lib/db/db';
+	export let recipe;
 </script>
+
 <article>
-<div class="image-holder">
-<img src={db.getFileUrl(recipe, recipe.image)} alt={recipe.name} />
-</div>
-<div class="text-holder">
-<h2 class="font-bold text-xl">{recipe.name}</h2>
-<div class="desc-and-instr line-clamp-4 flex-1">
-{@html recipe.recipeInstructions}
-</div>
-<button>Check out this recipe!</button>
-</div>
+	<div class="image-holder">
+		<img src={db.getFileUrl(recipe, recipe.image)} alt={recipe.name} />
+	</div>
+	<div class="text-holder">
+		<h2>{recipe.name}</h2>
+		<div class="desc-and-instr">
+			{@html recipe.recipeInstructions}
+		</div>
+		<button>Check out this recipe!</button>
+	</div>
 </article>
 
 <style>
- article {
-   @apply grid grid-cols-2 h-48 overflow-hidden rounded shadow;
- }
+	article {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		overflow: hidden;
+		padding: 0;
+		border-radius: var(--border-radius);
+		--typography-spacing-vertical: 0.2em;
+	}
 
- article img {
-   @apply object-cover w-full h-full;
- }
+	article h2 {
+		--typography-spacing-vertical: 0.5em;
+		line-height: normal;
+	}
 
- .image-holder {
-   border-color: var(--color-orange-4);
-   @apply h-full w-full relative border-r-4;
- }
- .text-holder {
-   @apply p-2 flex flex-col items-start;
- }
+	article img {
+		object-fit: cover;
+		height: 100%;
+		width: 100%;
+	}
 
- .button {
+	.image-holder {
+		border-right: 0.25rem solid var(--color-orange-3);
+	}
 
- }
+	.text-holder {
+		padding: var(--block-spacing-vertical) var(--block-spacing-horizontal);
+	}
+
+	.desc-and-instr {
+		-webkit-line-clamp: 2;
+	}
+
+	button {
+		margin: 0;
+		margin-top: 1rem;
+	}
 </style>
