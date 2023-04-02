@@ -3,23 +3,32 @@
 	export let recipe;
 </script>
 
-<article>
-	<div class="image-holder">
-		<img src={db.getFileUrl(recipe, recipe.image)} alt={recipe.name} />
-	</div>
-	<div class="text-holder">
-		<h2>{recipe.name}</h2>
-		<div class="desc-and-instr">
-			{@html recipe.recipeInstructions}
+{#if recipe}
+	<article>
+		<div class="image-holder">
+			<img src={db.getFileUrl(recipe, recipe.image)} alt={recipe.name} />
 		</div>
-		<button>Check out this recipe!</button>
-	</div>
-</article>
+		<div class="text-holder">
+			<h2>{recipe.name}</h2>
+			<div class="desc-and-instr">
+				{#if recipe.description.length > 200}
+					{@html recipe.description.replace(/<\/?[^>]+(>|$)/g, '')}
+				{:else if recipe.description}
+					{@html recipe.description.replace(/<\/?[^>]+(>|$)/g, '')}
+					{@html recipe.recipeInstructions.replace(/<\/?[^>]+(>|$)/g, '')}
+				{:else}
+					{@html recipe.recipeInstructions.replace(/<\/?[^>]+(>|$)/g, '')}
+				{/if}
+			</div>
+			<a href="recipes/{recipe.id}" role="button">Check out this recipe!</a>
+		</div>
+	</article>
+{/if}
 
 <style>
 	article {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: 1fr;
 		overflow: hidden;
 		padding: 0;
 		border-radius: var(--border-radius);
@@ -38,7 +47,7 @@
 	}
 
 	.image-holder {
-		border-right: 0.25rem solid var(--color-orange-3);
+		border-bottom: 0.25rem solid var(--color-orange-3);
 	}
 
 	.text-holder {
@@ -46,11 +55,19 @@
 	}
 
 	.desc-and-instr {
-		-webkit-line-clamp: 2;
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
 	}
 
-	button {
-		margin: 0;
-		margin-top: 1rem;
+	@media (min-width: 600px) {
+		article {
+			grid-template-columns: 1fr 1fr;
+		}
+		.image-holder {
+			border-right: 0.25rem solid var(--color-orange-3);
+			border-bottom: none;
+		}
 	}
 </style>
