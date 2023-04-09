@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import PlannerDay from './PlannerDay.svelte';
 	import { page } from '$app/stores';
-	import { db } from '$lib/db/db';
 
 	import dayjs from 'dayjs';
-	import toast from 'svelte-french-toast';
+	import { db } from '$lib/db/db';
 
 	interface Meal {
 		id: string;
@@ -29,7 +30,7 @@
 
 	let displayPlanner = false;
 
-	$: {
+	const updateMealMap = () => {
 		mealMap.clear();
 		mealList.forEach((meal) => {
 			let key = dayjs(meal.date).format('YYYYMMDD');
@@ -48,67 +49,43 @@
 				meals: mealMap.get(thisDate.format('YYYYMMDD'))
 			});
 		}
-	}
+	};
 
-	const handleDrop = async (
-		e: DragEvent & { target: HTMLDivElement },
-		i: number,
-		day: dayjs.Dayjs
-	) => {
-		if (!e || !e.target) return;
-		e.target.setAttribute('aria-busy', 'true');
-		try {
-			const data = e.dataTransfer?.getData('text/plain');
-			if (!data) {
-				throw new Error('No data');
-			}
-			const { id, meal } = JSON.parse(data);
-			if (!id) {
-				toast.error('Something went wrong');
-				throw new Error('Dropped data did not have ID');
-			}
-
-			let date = day.toDate();
-			if (id === -1) {
-				const newMeal = (await db.collection('meals').create(
-					{ date: day.toDate(), meal, sort: i, created_by: db?.authStore?.model?.id },
-					{
+	updateMealMap();
+	onMount(async () => {
+		db.collection('meals').subscribe('*', async (e) => {
+			try {
+				if (e.action !== 'delete') {
+					const record = await db.collection('meals').getOne<Meal>(e.record.id, {
 						expand: 'meal'
+					});
+					switch (e.action) {
+						case 'create':
+							mealList = [...mealList, record];
+							break;
+						case 'update':
+							const foundIndex = mealList.findIndex((element) => element.id === e.record.id);
+							mealList.splice(foundIndex, 1, record);
+							// Needed to let SvelteKit know that I've updated the array.
+							mealList = mealList;
+							break;
+						default:
+							console.error('Not sure what to do with this:', e);
 					}
-				)) satisfies Meal;
-				mealList = [...mealList, newMeal];
-			} else {
-				await db.collection('meals').update(id, { date: day.toDate() });
-				mealList = mealList.map((meal) => {
-					if (meal.id === id) {
-						meal.date = date;
-					}
-					return meal;
-				});
+				} else {
+					mealList = mealList.filter((el) => el.id !== e.record.id);
+				}
+				updateMealMap();
+			} catch (e) {
+				console.error(e);
 			}
-		} catch (e) {
-			console.error(e);
-			toast.error('Something went wrong');
-			return;
-		} finally {
-			e.target.setAttribute('aria-busy', 'false');
-		}
-	};
+		});
 
-	interface DragData {
-		id: string;
-		meal: string;
-	}
-
-	const handleDragStart = (e: DragEvent, data: DragData) => {
-		const str = JSON.stringify(data);
-		e.dataTransfer?.setData('text/plain', str);
-	};
-
-	function getDailyMeals(arr: Meal[] | undefined) {
-		let newArr = arr?.slice(0, 7) || [];
-		newArr.length = 7;
-		return newArr;
+		return db.collection('meals').unsubscribe;
+	});
+	$: {
+		startDate = startDate;
+		updateMealMap();
 	}
 </script>
 
@@ -148,35 +125,7 @@
 	</div>
 	<div class="week">
 		{#each days as day}
-			<div class="day">
-				<hgroup>
-					<h2>{day.date.format('ddd')}</h2>
-					<small>{day.date.format('DD MMM')}</small>
-				</hgroup>
-				{#if 1 == 1}
-					{@const theseMeals = getDailyMeals(mealMap.get(day.date.format('YYYYMMDD'))).sort(
-						(a, b) => (a.sort < b.sort ? 1 : -1)
-					)}
-					{#each theseMeals as meal, i}
-						<div
-							class="meal"
-							on:dragover|preventDefault
-							on:drop|stopPropagation={(e) => handleDrop(e, i, day.date)}
-						>
-							<span
-								class="meal-name"
-								draggable="true"
-								on:dragstart={(e) =>
-									handleDragStart(e, { id: meal.id, meal: meal?.expand?.meal?.id })}
-								>{#if meal?.expand?.meal?.name}{meal?.expand?.meal?.name}{:else}&nbsp;{/if}</span
-							>
-							{#if meal}
-								<span class="del">ⓧ</span>
-							{/if}
-						</div>
-					{/each}
-				{/if}
-			</div>
+			<PlannerDay {day} />
 		{/each}
 	</div>
 </div>
@@ -193,6 +142,7 @@
 		color: var(--color-yellow-5);
 		border-radius: 2rem 2rem 0 0;
 		text-align: center;
+		box-sizing: border-box;
 	}
 
 	.week {
@@ -213,24 +163,10 @@
 		}
 	}
 
-	.meal {
-		border-bottom: 1px dashed var(--color-yellow-5);
-		user-select: none;
-		cursor: move;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
-	.meal-name {
-		overflow: hidden;
-		white-space: nowrap;
-		text-overflow: ellipsis;
-	}
-
 	.control {
 		cursor: pointer;
 		user-select: none;
+		box-sizing: border-box;
 	}
 
 	.control-top {

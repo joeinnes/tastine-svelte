@@ -12,7 +12,7 @@
 </script>
 
 {#if recipe}
-	<article draggable="true" on:dragstart={(e) => handleDragStart(e, { id: -1, meal: recipe.id })}>
+	<article draggable="true" on:dragstart={(e) => handleDragStart(e, { id: '-1', meal: recipe.id })}>
 		<div class="image-holder">
 			<img src={db.getFileUrl(recipe, recipe.image)} alt={recipe.name} />
 		</div>
@@ -22,8 +22,10 @@
 				{#if recipe.description.length > 200}
 					{@html recipe.description.replace(/<\/?[^>]+(>|$)/g, '')}
 				{:else if recipe.description}
-					{@html recipe.description.replace(/<\/?[^>]+(>|$)/g, '')}
-					{@html recipe.recipeInstructions.replace(/<\/?[^>]+(>|$)/g, '')}
+					{@html (recipe.description + ' ' + recipe.recipeInstructions).replace(
+						/<\/?[^>]+(>|$)/g,
+						''
+					)}
 				{:else}
 					{@html recipe.recipeInstructions.replace(/<\/?[^>]+(>|$)/g, '')}
 				{/if}
@@ -67,7 +69,6 @@
 		-webkit-line-clamp: 3;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
-		padding-bottom: var(--spacing);
 	}
 
 	@media (min-width: 600px) {
