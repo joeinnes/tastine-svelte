@@ -1,9 +1,5 @@
 /* Configure basic theme colour */
-$grey-hue: 201 !default;
-$primary-hue: 201 !default;
+$grey-hue: 35 !default;
+$primary-hue: 35 !default;
 
 @import '@picocss/pico/scss/pico';
-
-:root {
-	--spacing: 1rem;
-}
