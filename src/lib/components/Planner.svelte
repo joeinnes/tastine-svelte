@@ -10,6 +10,7 @@
 		expand: {
 			meal: {
 				name: string;
+				id: string;
 			};
 		};
 		date: Date;
@@ -25,6 +26,8 @@
 	let days: Day[] = [];
 	let mealMap = new Map<string, Meal[]>();
 	let mealList: Meal[] = $page.data.meals;
+
+	let displayPlanner = false;
 
 	$: {
 		mealMap.clear();
@@ -54,20 +57,35 @@
 	) => {
 		if (!e || !e.target) return;
 		e.target.setAttribute('aria-busy', 'true');
-		const id = e.dataTransfer?.getData('text/plain');
-		if (!id) {
-			toast.error('Something went wrong');
-			return;
-		}
 		try {
+			const data = e.dataTransfer?.getData('text/plain');
+			if (!data) {
+				throw new Error('No data');
+			}
+			const { id, meal } = JSON.parse(data);
+			if (!id) {
+				toast.error('Something went wrong');
+				throw new Error('Dropped data did not have ID');
+			}
+
 			let date = day.toDate();
-			await db.collection('meals').update(id, { date: day.toDate() });
-			mealList = mealList.map((meal) => {
-				if (meal.id === id) {
-					meal.date = date;
-				}
-				return meal;
-			});
+			if (id === -1) {
+				const newMeal = (await db.collection('meals').create(
+					{ date: day.toDate(), meal, sort: i, created_by: db?.authStore?.model?.id },
+					{
+						expand: 'meal'
+					}
+				)) satisfies Meal;
+				mealList = [...mealList, newMeal];
+			} else {
+				await db.collection('meals').update(id, { date: day.toDate() });
+				mealList = mealList.map((meal) => {
+					if (meal.id === id) {
+						meal.date = date;
+					}
+					return meal;
+				});
+			}
 		} catch (e) {
 			console.error(e);
 			toast.error('Something went wrong');
@@ -77,8 +95,14 @@
 		}
 	};
 
-	const handleDragStart = (e: DragEvent, id: string) => {
-		e.dataTransfer?.setData('text/plain', id);
+	interface DragData {
+		id: string;
+		meal: string;
+	}
+
+	const handleDragStart = (e: DragEvent, data: DragData) => {
+		const str = JSON.stringify(data);
+		e.dataTransfer?.setData('text/plain', str);
 	};
 
 	function getDailyMeals(arr: Meal[] | undefined) {
@@ -88,7 +112,40 @@
 	}
 </script>
 
-<div class="planner" style="transform: translateX(-50%) translateY(-100%);">
+<div
+	class="planner"
+	style={`transition: transform var(--transition); transform: translateX(-50%) ${
+		displayPlanner ? 'translateY(-100%)' : ''
+	}`}
+>
+	<div
+		class="control control-top"
+		class:is-open={displayPlanner}
+		on:click={() => (displayPlanner = !displayPlanner)}
+		on:keypress={() => (displayPlanner = !displayPlanner)}
+	>
+		<div>➜</div>
+		<div>➜</div>
+		<div>➜</div>
+	</div>
+	<div
+		class="control control-back"
+		on:click={() => (startDate = startDate.subtract(1, 'day'))}
+		on:keypress={() => (startDate = startDate.subtract(1, 'day'))}
+	>
+		<div>➜</div>
+		<div>➜</div>
+		<div>➜</div>
+	</div>
+	<div
+		class="control control-next"
+		on:click={() => (startDate = startDate.add(1, 'day'))}
+		on:keypress={() => (startDate = startDate.add(1, 'day'))}
+	>
+		<div>➜</div>
+		<div>➜</div>
+		<div>➜</div>
+	</div>
 	<div class="week">
 		{#each days as day}
 			<div class="day">
@@ -106,9 +163,16 @@
 							on:dragover|preventDefault
 							on:drop|stopPropagation={(e) => handleDrop(e, i, day.date)}
 						>
-							<span draggable="true" on:dragstart={(e) => handleDragStart(e, meal.id)}
+							<span
+								class="meal-name"
+								draggable="true"
+								on:dragstart={(e) =>
+									handleDragStart(e, { id: meal.id, meal: meal?.expand?.meal?.id })}
 								>{#if meal?.expand?.meal?.name}{meal?.expand?.meal?.name}{:else}&nbsp;{/if}</span
 							>
+							{#if meal}
+								<span class="del">ⓧ</span>
+							{/if}
 						</div>
 					{/each}
 				{/if}
@@ -117,8 +181,9 @@
 	</div>
 </div>
 
-<style>
+<style lang="scss">
 	.planner {
+		transition: transform var(--transition);
 		position: fixed;
 		top: 100vh;
 		left: 50vw;
@@ -127,6 +192,7 @@
 		background-color: var(--color-yellow-1);
 		color: var(--color-yellow-5);
 		border-radius: 2rem 2rem 0 0;
+		text-align: center;
 	}
 
 	.week {
@@ -134,26 +200,77 @@
 		padding: var(--spacing);
 		gap: var(--spacing);
 		grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
-	}
-
-	.day h2 {
-		font-size: larger;
+		text-align: initial;
 	}
 
 	.day {
 		overflow: hidden;
-	}
-
-	.day small {
-		color: var(--color-yellow-3);
+		h2 {
+			font-size: larger;
+		}
+		small {
+			color: var(--color-yellow-3);
+		}
 	}
 
 	.meal {
 		border-bottom: 1px dashed var(--color-yellow-5);
+		user-select: none;
+		cursor: move;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.meal-name {
 		overflow: hidden;
 		white-space: nowrap;
 		text-overflow: ellipsis;
+	}
+
+	.control {
+		cursor: pointer;
 		user-select: none;
-		cursor: move;
+	}
+
+	.control-top {
+		position: relative;
+		display: inline-block;
+		padding: 0 var(--spacing);
+		background-color: var(--color-yellow-1);
+		border-radius: var(--border-radius) var(--border-radius) 0 0;
+		transform: translateY(-100%);
+	}
+
+	.control-top div {
+		transition: transform var(--transition);
+		display: inline-block;
+		transform-origin: center;
+		transform: rotate(-90deg);
+	}
+
+	.control-top.is-open div {
+		transform: rotate(90deg);
+	}
+
+	.control-back {
+		position: absolute;
+		transform: translateX(-100%) translateY(-50%);
+		top: 50%;
+		padding: var(--spacing) calc(0.5 * var(--spacing));
+		background-color: var(--color-yellow-1);
+		border-radius: var(--border-radius) 0 0 var(--border-radius);
+		div {
+			transform: rotate(-180deg);
+		}
+	}
+	.control-next {
+		padding: var(--spacing) calc(0.5 * var(--spacing));
+		background-color: var(--color-yellow-1);
+		border-radius: 0 var(--border-radius) var(--border-radius) 0;
+		position: absolute;
+		right: 0;
+		transform: translateX(100%) translateY(-50%);
+		top: 50%;
 	}
 </style>

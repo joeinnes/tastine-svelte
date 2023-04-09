@@ -1,10 +1,18 @@
 <script lang="ts">
 	import { db } from '$lib/db/db';
 	export let recipe;
+	interface DragData {
+		id: string;
+		meal: string;
+	}
+	const handleDragStart = (e: DragEvent, data: DragData) => {
+		const str = JSON.stringify(data);
+		e.dataTransfer?.setData('text/plain', str);
+	};
 </script>
 
 {#if recipe}
-	<article>
+	<article draggable="true" on:dragstart={(e) => handleDragStart(e, { id: -1, meal: recipe.id })}>
 		<div class="image-holder">
 			<img src={db.getFileUrl(recipe, recipe.image)} alt={recipe.name} />
 		</div>
