@@ -8,19 +8,21 @@
 		<li><a href="/" role="button">🥘 Tastine</a></li>
 	</ul>
 	<ul>
-		<li><button on:click={logOut}>Log Out</button></li>
+		<li>
+			{#if db.authStore.isValid}<button on:click={logOut}>Log Out</button>{/if}
+		</li>
 	</ul>
 </nav>
 
 <style>
 	nav {
 		padding: 0rem 0.5rem;
-		border-bottom: 0.25rem solid var(--color-orange-3);
+		border-bottom: 0.25rem solid var(--primary-hover);
+		background-color: var(--primary-focus);
 	}
 
 	a {
 		font-family: 'Megrim';
-		padding: 0.5rem;
 		font-size: xx-large;
 		white-space: nowrap;
 	}

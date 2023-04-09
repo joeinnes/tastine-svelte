@@ -47,11 +47,11 @@
 	}
 
 	.image-holder {
-		border-bottom: 0.25rem solid var(--color-orange-3);
+		border-bottom: 0.25rem solid var(--primary);
 	}
 
 	.text-holder {
-		padding: var(--block-spacing-vertical) var(--block-spacing-horizontal);
+		padding: var(--spacing);
 	}
 
 	.desc-and-instr {
@@ -59,6 +59,7 @@
 		-webkit-line-clamp: 3;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
+		padding-bottom: var(--spacing);
 	}
 
 	@media (min-width: 600px) {
@@ -66,7 +67,7 @@
 			grid-template-columns: 1fr 1fr;
 		}
 		.image-holder {
-			border-right: 0.25rem solid var(--color-orange-3);
+			border-right: 0.25rem solid var(--primary);
 			border-bottom: none;
 		}
 	}

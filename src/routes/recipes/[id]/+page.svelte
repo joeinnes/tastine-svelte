@@ -6,7 +6,7 @@
 
 	import type { PageData } from './$types';
 	export let data: PageData;
-	const recipe = data.recipe;
+	const { recipe } = data;
 </script>
 
 <div class="container">
@@ -22,13 +22,13 @@
 				</hgroup>
 				{#if !Array.isArray(recipe.expand.author)}
 					{@const avatar = db.getFileUrl(recipe.expand.author, recipe.expand.author.avatar)}
-					<hgroup>
+					<div class="meta">
 						<div class="author">
 							<img src={avatar} alt={recipe.expand.author.name} class="avatar" />
 							{recipe.expand.author.name}
 						</div>
 						<small>{dayjs().to(dayjs(recipe.created))}</small>
-					</hgroup>
+					</div>
 				{/if}
 			</div>
 
@@ -53,6 +53,14 @@
 </div>
 
 <style>
+	.container {
+		max-width: 80ch;
+	}
+
+	.header {
+		margin-bottom: 0;
+	}
+
 	article {
 		padding: 0;
 		overflow: hidden;
@@ -85,5 +93,14 @@
 		border-radius: 100%;
 		aspect-ratio: 1/1;
 		height: 2rem;
+	}
+
+	.meta {
+		align-self: flex-start;
+		text-align: right;
+	}
+
+	.meta small {
+		color: var(--muted-color);
 	}
 </style>
