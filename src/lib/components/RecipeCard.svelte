@@ -1,10 +1,8 @@
 <script lang="ts">
+	import type { DragData, Recipe } from '../../app';
 	import { db } from '$lib/db/db';
-	export let recipe;
-	interface DragData {
-		id: string;
-		meal: string;
-	}
+	export let recipe: Recipe;
+
 	const handleDragStart = (e: DragEvent, data: DragData) => {
 		const str = JSON.stringify(data);
 		e.dataTransfer?.setData('text/plain', str);
@@ -46,8 +44,8 @@
 	}
 
 	article h2 {
-		--typography-spacing-vertical: 0.5em;
-		line-height: normal;
+		margin-bottom: 0;
+		line-height: 1.2;
 	}
 
 	article img {
@@ -69,6 +67,7 @@
 		-webkit-line-clamp: 3;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
+		margin-bottom: var(--typography-spacing-vertical);
 	}
 
 	@media (min-width: 600px) {

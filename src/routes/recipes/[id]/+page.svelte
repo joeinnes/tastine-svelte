@@ -7,6 +7,8 @@
 	import type { PageData } from './$types';
 	export let data: PageData;
 	const { recipe } = data;
+	const ingredients = recipe.expand['recipe_ingredients(recipe)'];
+	console.log(recipe);
 </script>
 
 <div class="container">
@@ -17,9 +19,9 @@
 			<div class="recipe-header">
 				<hgroup class="header">
 					<h1>{recipe.name}</h1>
-
 					{@html recipe.description}
 				</hgroup>
+
 				{#if !Array.isArray(recipe.expand.author)}
 					{@const avatar = db.getFileUrl(recipe.expand.author, recipe.expand.author.avatar)}
 					<div class="meta">
@@ -31,23 +33,36 @@
 					</div>
 				{/if}
 			</div>
-
-			{@html recipe.recipeInstructions}
-
-			{#if Array.isArray(recipe.expand.suitableForDiet)}
-				{#each recipe.expand.suitableForDiet as diet}
-					<span
-						class="chip"
-						style="background-color: hsl({diet.hue} 100% 85%); color: hsl({diet.hue} 100% 15%)"
-					>
-						#{diet.name.toLowerCase()}
+			<p>
+				{#if Array.isArray(recipe.expand.suitableForDiet)}
+					{#each recipe.expand.suitableForDiet as diet}
+						<span
+							class="chip"
+							style="background-color: hsl({diet.hue} 100% 85%); color: hsl({diet.hue} 100% 15%)"
+						>
+							#{diet.name.toLowerCase()}
+						</span>
+					{/each}
+				{:else if recipe.expand.suitableForDiet}
+					<span style="background-color: hsl({recipe.expand?.suitableForDiet?.hue} 100% 80%)">
+						#{recipe.expand?.suitableForDiet?.name}
 					</span>
-				{/each}
-			{:else}
-				<span style="background-color: hsl({recipe.expand.suitableForDiet.hue} 100% 80%)">
-					#{recipe.expand.suitableForDiet.name}
-				</span>
-			{/if}
+				{/if}
+			</p>
+			<h2>Ingredients</h2>
+			<ul>
+				{#if Array.isArray(ingredients)}
+					{#each ingredients as ingredient}
+						<li>
+							{ingredient.quantity}
+							{ingredient.unit} of {ingredient.expand?.ingredient?.name}
+						</li>
+					{/each}
+				{/if}
+			</ul>
+
+			<h2>Method</h2>
+			{@html recipe.recipeInstructions}
 		</div>
 	</article>
 </div>
@@ -81,6 +96,7 @@
 		margin-right: 0.5rem;
 		border-radius: 100rem;
 		padding: 0.25rem 0.5rem;
+		font-size: smaller;
 	}
 
 	.recipe-header {

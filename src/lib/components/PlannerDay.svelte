@@ -1,26 +1,9 @@
 <script lang="ts">
 	import PlannerMeal from './PlannerMeal.svelte';
 
-	import type dayjs from 'dayjs';
+	import type { Day, Meal } from '../../app';
 
 	export let day: Day;
-
-	interface Day {
-		date: dayjs.Dayjs;
-		meals: Meal[] | undefined;
-	}
-
-	interface Meal {
-		id: string;
-		expand: {
-			meal: {
-				name: string;
-				id: string;
-			};
-		};
-		date: Date;
-		sort: number;
-	}
 
 	function getDailyMeals(arr: Meal[] | undefined) {
 		let newArr = arr?.slice(0, 7) || [];

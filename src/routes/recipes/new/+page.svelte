@@ -1,4 +1,7 @@
 <script lang="ts">
+	import type { Ingredient, Recipe, RecipeIngredient } from '../../../app';
+	import { fade } from 'svelte/transition';
+
 	import dayjs from 'dayjs';
 	import duration from 'dayjs/plugin/duration';
 
@@ -7,23 +10,14 @@
 	import { db } from '$lib/db/db';
 
 	import type { PageData } from './$types';
+	import NewIngredient from '$lib/components/NewIngredient.svelte';
 	export let data: PageData;
-	const { diets } = data;
+	const { diets, ingredients } = data;
+	let openNewIngredientModal = false;
 	dayjs.extend(duration);
 
-	interface Recipe {
-		name: String;
-		image: null | File;
-		description: String;
-		recipeInstructions: String;
-		recipeYield: String;
-		prepTime: String;
-		cookTime: String;
-		suitableForDiet: String[];
-		author: String | null;
-	}
-
-	let recipe: Recipe = {
+	type NewRecipe = Omit<Recipe, 'id' | 'collectionId' | 'collectionName'>;
+	let recipe: NewRecipe = {
 		name: '',
 		image: null,
 		description: '',
@@ -35,6 +29,18 @@
 		author: db.authStore.model?.id ?? null
 	};
 
+	// Note that this could create inconsistencies ATM if recipe can be created without ingredients, or without all ingredients. Should have some batch logic for the ingredients.
+	const createRecipeAndAddIngredients = async (
+		recipeFormData: FormData,
+		ingredients: RecipeIngredient[]
+	) => {
+		const { id } = await db.collection('recipes').create(recipeFormData, {
+			expand: 'recipe_ingredients(recipe)'
+		});
+		for (let ingredient of ingredients) {
+			await db.collection('recipe_ingredients').create({ ...ingredient, recipe: id });
+		}
+	};
 	const handleSubmit = async () => {
 		let errorCount = 0;
 		const formData = new FormData();
@@ -53,12 +59,15 @@
 				}
 			}
 		}
+		for (let [k, v] of formData.entries()) {
+			console.log(k, JSON.stringify(v));
+		}
 		if (errorCount) {
 			toast.error(`${errorCount} error${errorCount > 1 ? 's were' : 'was'} found.`);
 			return;
 		}
 
-		toast.promise(db.collection('recipes').create(formData), {
+		toast.promise(createRecipeAndAddIngredients(formData, selectedIngredients), {
 			loading: 'Saving...',
 			success: 'Recipe saved!',
 			error: 'Could not save recipe.'
@@ -71,12 +80,21 @@
 	let preview: null | string = null;
 	let errors: string[] = [];
 	let img: FileList | null;
+	let selectedIngredients: RecipeIngredient[] = [];
+	let newIngredient: Ingredient;
+	let filter: string;
+	let filteredIngredients: Ingredient[];
 
 	$: {
 		recipe.prepTime = dayjs.duration(prep, 'm').toISOString();
 		recipe.cookTime = dayjs.duration(cook, 'm').toISOString();
 		recipe.image = img?.length ? img[0] : null;
 		preview = recipe.image && URL.createObjectURL(recipe.image);
+		filteredIngredients = filter
+			? ingredients.filter((el) => {
+					return el?.name?.toLowerCase()?.indexOf(filter?.toLowerCase()) > -1;
+			  })
+			: ingredients;
 	}
 </script>
 
@@ -113,7 +131,6 @@
 					<div class="preview-container">
 						{#if preview}<img src={preview} alt="Preview" />{:else}<svg
 								width="25%"
-								height="auto"
 								viewBox="0 0 24 24"
 								version="1.1"
 								xmlns="http://www.w3.org/2000/svg"
@@ -140,7 +157,6 @@
 					<div class="dropzone">
 						<svg
 							width="25%"
-							height="auto"
 							viewBox="0 0 24 24"
 							version="1.1"
 							xmlns="http://www.w3.org/2000/svg"
@@ -236,12 +252,92 @@
 					{/each}
 				</div>
 			</fieldset>
+
+			Ingredients
+
+			<details role="list">
+				<summary aria-haspopup="listbox">Ingredient</summary>
+				<ul role="listbox">
+					<li>
+						<input bind:value={filter} type="search" placeholder="Search..." />
+					</li>
+					{#each filteredIngredients as ingredient}
+						<li>
+							<label>
+								<input
+									type="checkbox"
+									value={{ ingredient: ingredient.id }}
+									bind:group={selectedIngredients}
+								/>
+								{ingredient.name}
+							</label>
+						</li>
+					{/each}
+					<li>
+						<button type="button" class="outline" on:click={() => (openNewIngredientModal = true)}
+							>&plus; Add new ingredient</button
+						>
+					</li>
+				</ul>
+			</details>
+
+			{#each selectedIngredients as ingredient, i}
+				{@const thisIngredient = ingredients.find((el) => el.id === ingredient.ingredient)}
+				{#if thisIngredient}
+					<div class="ingredient" transition:fade={{ duration: 200 }}>
+						<input
+							type="number"
+							min="0"
+							required
+							bind:value={selectedIngredients[i].quantity}
+							placeholder={thisIngredient.defaultQty + ''}
+						/>
+						<input
+							type="text"
+							required
+							bind:value={selectedIngredients[i].unit}
+							placeholder={(selectedIngredients[i].quantity &&
+								selectedIngredients[i].quantity > 1) ||
+							(!selectedIngredients[i].quantity && thisIngredient.defaultQty > 1)
+								? thisIngredient.defaultUnitPlural
+								: thisIngredient.defaultUnit}
+						/>
+						<div class="name">
+							of {thisIngredient?.name}
+						</div>
+						<button
+							class="outline"
+							on:click={() => {
+								selectedIngredients.splice(i, 1);
+								selectedIngredients = selectedIngredients;
+							}}
+						>
+							ⓧ
+						</button>
+					</div>
+				{/if}
+			{/each}
+
 			<button type="submit">Save</button>
 		</form>
 	</article>
 </div>
 
-<style>
+<NewIngredient on:close={() => (openNewIngredientModal = false)} open={openNewIngredientModal} />
+
+<style lang="scss">
+	.ingredient {
+		display: flex;
+		align-items: center;
+		justify-content: flex-start;
+		gap: var(--spacing);
+		margin: 0;
+		.name {
+			display: inline-block;
+			flex-basis: 100%;
+		}
+	}
+
 	.diets {
 		display: grid;
 		grid-template-columns: 1fr;

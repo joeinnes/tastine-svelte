@@ -1,17 +1,18 @@
 <script lang="ts">
+	import type { Recipe } from '../../app';
 	import RecipeCard from '$lib/components/RecipeCard.svelte';
-	export let recipes = [];
+	export let recipes: Recipe[];
 </script>
 
 <div class="recipe-grid container-fluid">
 	{#each recipes as recipe}
 		<RecipeCard {recipe} />
-		<div class="add-new">
-			<a href="/recipes/new" role="button">&plus; New recipe</a>
-		</div>
 	{:else}
 		No recipes
 	{/each}
+	<div class="add-new">
+		<a href="/recipes/new" role="button">&plus; New recipe</a>
+	</div>
 </div>
 
 <style>

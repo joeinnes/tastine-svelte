@@ -1,25 +1,10 @@
 <script lang="ts">
+	import type { Meal, Day, DragData } from '../../app';
 	import { page } from '$app/stores';
 	import { db } from '$lib/db/db';
 
 	import dayjs from 'dayjs';
 	import toast from 'svelte-french-toast';
-
-	interface Meal {
-		id: string;
-		expand: {
-			meal: {
-				name: string;
-				id: string;
-			};
-		};
-		date: Date;
-		sort: number;
-	}
-	interface Day {
-		date: dayjs.Dayjs;
-		meals: Meal[] | undefined;
-	}
 
 	let startDate = dayjs().subtract(1, 'day');
 
@@ -27,12 +12,8 @@
 	let mealMap = new Map<string, Meal[]>();
 	let mealList: Meal[] = $page.data.meals;
 
-	const handleDrop = async (
-		e: DragEvent & { target: HTMLDivElement },
-		i: number,
-		day: dayjs.Dayjs
-	) => {
-		if (!e || !e.target) return;
+	const handleDrop = async (e: DragEvent, i: number, day: dayjs.Dayjs) => {
+		if (!e || !e.target || !(e.target instanceof HTMLDivElement)) return;
 		try {
 			const data = e.dataTransfer?.getData('text/plain');
 			if (!data) {
@@ -71,11 +52,6 @@
 		}
 	};
 
-	interface DragData {
-		id: string;
-		meal: string;
-	}
-
 	const handleDragStart = (e: DragEvent, data: DragData) => {
 		const str = JSON.stringify(data);
 		e.dataTransfer?.setData('text/plain', str);
@@ -93,17 +69,14 @@
 	class="meal"
 	on:dragover|preventDefault
 	on:drop|stopPropagation={(e) => handleDrop(e, i, day.date)}
+	draggable="true"
+	on:dragstart={(e) => handleDragStart(e, { id: meal.id, meal: meal?.expand?.meal?.id })}
 >
-	<span
-		class="meal-name"
-		draggable="true"
-		on:dragstart={(e) => handleDragStart(e, { id: meal.id, meal: meal?.expand?.meal?.id })}
+	<span class="meal-name"
 		>{#if meal?.expand?.meal?.name}{meal?.expand?.meal?.name}{:else}&nbsp;{/if}</span
 	>
 	{#if meal}
-		<span class="del" on:click={() => handleDel(meal.id)} on:keypress={() => handleDel(meal.id)}
-			>ⓧ</span
-		>
+		<button class="del" on:click={() => handleDel(meal.id)}>ⓧ</button>
 	{/if}
 </div>
 
@@ -121,5 +94,14 @@
 		overflow: hidden;
 		white-space: nowrap;
 		text-overflow: ellipsis;
+	}
+	.del {
+		cursor: pointer;
+		background: none;
+		border: none;
+		color: inherit;
+		padding: 0;
+		margin: 0;
+		width: auto;
 	}
 </style>

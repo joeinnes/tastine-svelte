@@ -3,3 +3,10 @@ $grey-hue: 35 !default;
 $primary-hue: 35 !default;
 
 @import '@picocss/pico/scss/pico';
+
+/* Font family is not exposed as a SASS variable, override in pure CSS */
+:root {
+	--font-family: 'Avenir Next', Avenir, 'Century Gothic', 'Gill Sans', ui-sans-serif, system-ui,
+		-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
+		sans-serif, 'apple color emoji', 'segoe ui emoji', 'Segoe UI Symbol', 'noto color emoji';
+}

@@ -24,6 +24,3 @@
 	</label>
 	<button>Submit</button>
 </form>
-
-<style>
-</style>
