@@ -25,6 +25,7 @@
 <style lang="scss">
 	.day {
 		overflow: hidden;
+		user-select: none;
 		h2 {
 			font-size: larger;
 		}

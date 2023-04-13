@@ -180,6 +180,16 @@
 <style lang="scss">
 	.align-to-end {
 		left: unset;
+		background-color: var(--color-yellow-1);
+		border-radius: var(--border-radius) 0 var(--border-radius) var(--border-radius);
+		li {
+			margin: 0;
+			padding: var(--form-element-spacing-vertical);
+		}
+		input {
+			background-color: var(--primary-inverse);
+			margin: 0;
+		}
 	}
 	.planner {
 		transition: transform var(--transition);
@@ -188,6 +198,7 @@
 		left: 50vw;
 		width: 90vw;
 		margin: auto 0;
+		background: radial-gradient(var(--color-yellow-2) 1px, transparent 1px) 0 0 / 40px 40px;
 		background-color: var(--color-yellow-1);
 		color: var(--color-yellow-5);
 		border-radius: 2rem 2rem 0 0;
