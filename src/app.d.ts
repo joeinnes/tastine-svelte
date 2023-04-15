@@ -11,12 +11,14 @@ declare global {
 
 export interface Meal {
 	id: string;
-	expand: {
+	expand?: {
 		meal: {
 			name: string;
 			id: string;
+			expand?: any;
 		};
 	};
+	meal: string;
 	date: Date;
 	sort: number;
 }

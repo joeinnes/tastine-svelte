@@ -26,7 +26,7 @@
 			}
 
 			let date = day.toDate();
-			if (id === -1) {
+			if (id === '-1') {
 				const newMeal = (await db.collection('meals').create(
 					{ date: day.toDate(), meal, sort: i, created_by: db?.authStore?.model?.id },
 					{

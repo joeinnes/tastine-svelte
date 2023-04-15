@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import PlannerDay from './PlannerDay.svelte';
 	import { page } from '$app/stores';
+	import mealMap from '$lib/stores/MealMap';
 
 	import dayjs from 'dayjs';
 	import { db } from '$lib/db/db';
@@ -10,29 +11,28 @@
 	let startDate = dayjs().subtract(1, 'day');
 
 	let days: Day[] = [];
-	let mealMap = new Map<string, Meal[]>();
 	let mealList: Meal[] = $page.data.meals;
 
 	let displayPlanner = false;
 	let selectedDate: string | undefined;
 
 	const updateMealMap = () => {
-		mealMap.clear();
+		$mealMap.clear();
 		mealList.forEach((meal) => {
 			let key = dayjs(meal.date).format('YYYYMMDD');
-			let oldVal = mealMap.get(key);
+			let oldVal = $mealMap.get(key);
 			let newVal = [meal];
 			if (oldVal) {
 				newVal = [...oldVal, meal];
 			}
-			mealMap.set(key, newVal);
+			$mealMap.set(key, newVal);
 		});
 		days = [];
 		for (let i = 0; i < 7; i++) {
 			const thisDate = startDate.add(i, 'day');
 			days.push({
 				date: thisDate,
-				meals: mealMap.get(thisDate.format('YYYYMMDD'))
+				meals: $mealMap.get(thisDate.format('YYYYMMDD'))
 			});
 		}
 	};
