@@ -1,4 +1,4 @@
-import type { Meal, Recipe, RecipeIngredient } from '../app';
+import type { Control, Meal, Recipe, RecipeIngredient } from '../app';
 
 import { db } from '$lib/db/db';
 import { error } from '@sveltejs/kit';
@@ -19,6 +19,7 @@ export const load = (() => {
 		let meals = db.collection('meals').getFullList<DetailedMeal>(undefined, {
 			expand: 'meal,meal.recipe_ingredients(recipe).ingredient'
 		});
+		let controls = db.collection('controls').getFullList<Control>();
 		return {
 			meals
 		};

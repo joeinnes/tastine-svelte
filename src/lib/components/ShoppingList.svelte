@@ -1,11 +1,18 @@
 <script lang="ts">
-	import type { RecipeIngredient } from '../../app';
+	import { fly } from 'svelte/transition';
+	import { page } from '$app/stores';
+
+	import type { Control, RecipeIngredient } from '../../app';
 	import mealMap from '$lib/stores/MealMap';
 	import dayjs from 'dayjs';
 
 	let startDate = dayjs();
 	let endDate = dayjs().add(7, 'days');
 	let ingredients: Map<string, Map<string, number>> = new Map();
+	let tab: 'list' | 'controls' = 'list';
+	let display = false;
+
+	let controls: Control[] = $page.data.controls;
 
 	$: {
 		let i = 0;
@@ -48,21 +55,137 @@
 	};
 </script>
 
-<aside>
-	{#each [...ingredients.entries()] as ingredient}
-		<label for="ingredient" data-tooltip={getTooltip(ingredient[1])}
-			><input type="checkbox" id="ingredient" />{ingredient[0]}</label
+<aside style="transform: translateY(-50%) {display ? '' : 'translateX(100%)'}">
+	<div class="control">
+		<!-- svelte-ignore a11y-no-redundant-roles -->
+		<button on:click={() => (display = !display)} class="control" class:display role="button">
+			<div>➜</div>
+			<div>➜</div>
+			<div>➜</div></button
 		>
-	{/each}
+	</div>
+	<div class="content-container">
+		<h3>Shopping List</h3>
+
+		<!-- svelte-ignore a11y-no-noninteractive-element-to-interactive-role -->
+		<nav class="tablist">
+			<button role="tab" class:active={tab === 'list'} on:click={() => (tab = 'list')}>
+				List
+			</button>
+			<button role="tab" class:active={tab === 'controls'} on:click={() => (tab = 'controls')}>
+				Controls
+			</button>
+		</nav>
+		{#if tab === 'list'}
+			<div in:fly={{ x: 200, duration: 200, delay: 200 }} out:fly={{ x: 200, duration: 200 }}>
+				{#each [...ingredients.entries()] as ingredient}
+					<label for="ingredient" data-placement="left" data-tooltip={getTooltip(ingredient[1])}
+						><input type="checkbox" id="ingredient" />{ingredient[0]}</label
+					>
+				{/each}
+			</div>
+		{:else}
+			<div in:fly={{ x: 200, duration: 200, delay: 200 }} out:fly={{ x: 200, duration: 200 }}>
+				Controls here
+			</div>
+		{/if}
+	</div>
 </aside>
 
 <style>
+	.content-container {
+		padding: var(--spacing);
+	}
 	aside {
-		margin-top: 5rem;
+		position: fixed;
+		right: 0;
+		transition: transform var(--transition);
+		width: 25ch;
+		height: 80vh;
+		top: 50%;
+		background: radial-gradient(var(--color-yellow-2) 1px, var(--color-yellow-1) 1px) 0 0 / 40px
+			40px;
+		color: var(--color-yellow-5);
+		border-radius: var(--border-radius) 0 0 var(--border-radius);
+		text-align: left;
+		box-sizing: border-box;
 	}
 	label {
 		border-bottom: none;
 		cursor: initial;
 		user-select: none;
+	}
+	h3 {
+		margin-bottom: calc(0.25 * var(--spacing));
+	}
+
+	nav.tablist {
+		display: flex;
+		justify-content: space-around;
+		user-select: none;
+		border-bottom: 1px solid var(--muted-border-color);
+		margin-bottom: calc(0.55 * var(--spacing));
+	}
+	button[role='tab'] {
+		background: none;
+		display: inline-block;
+		color: var(--form-element-disabled-border-color);
+		border: 0px;
+		border-bottom: 1px solid transparent;
+		transition: all var(--transition);
+		text-align: center;
+		user-select: none;
+		width: 100%;
+		padding: 0;
+		margin: 0;
+	}
+
+	button[role='tab'].active,
+	button[role='tab']:hover {
+		color: var(--contrast);
+		border-radius: 0;
+		border-bottom: 1px solid var(--contrast);
+		outline: none;
+	}
+	button[role='tab']:focus {
+		background: transparent;
+		box-shadow: none;
+	}
+
+	.control {
+		position: absolute;
+		top: 50%;
+		transform: translateX(-100%) translateY(-50%);
+		border-radius: var(--border-radius) 0 0 var(--border-radius);
+	}
+	.control div {
+		transform: rotate(180deg);
+		display: inline-block;
+		transition: transform var(--transition);
+	}
+	.control.display div {
+		transform: rotate(0deg);
+	}
+
+	button.control {
+		border: none;
+		background-color: var(--color-yellow-1);
+		color: var(--color-yellow-5);
+		display: inline-block;
+		width: auto;
+		cursor: pointer;
+		user-select: none;
+		box-sizing: border-box;
+		outline: none;
+		&:focus {
+			box-shadow: none;
+		}
+	}
+
+	.control {
+		& button,
+		[role='button'] {
+			padding: calc(0.5 * var(--spacing));
+		}
 	}
 </style>

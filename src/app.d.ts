@@ -82,3 +82,9 @@ export interface Diet {
 	enum: string;
 	hue: number;
 }
+
+export interface Control {
+	id: string;
+	control: string;
+	weeklyTarget: number;
+}
